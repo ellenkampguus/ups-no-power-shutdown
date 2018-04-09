@@ -1,0 +1,1 @@
+# ups-no-power-shutdown
