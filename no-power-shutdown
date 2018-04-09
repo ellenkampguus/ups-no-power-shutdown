@@ -1,0 +1,40 @@
+timestamp() {
+	date +"%s"
+}
+tsstart=$(timestamp)
+command=`ping 172.16.2.101 -c 4 | grep Destination`
+echo '-----'
+echo Command: $command
+echo '-----'
+result=$command
+echo '-----'
+echo Result: $result
+echo '-----'
+if [ -z $result ];
+then
+	echo "Network is up. Timestamp: $tsstart." > /dev/shm/network-status
+	echo "$tsstart" > /dev/shm/network-last-uptime
+else
+	echo "Network is down. Timestamp: $tsstart." > /dev/shm/network-status
+fi
+more /dev/shm/network-status
+sleep 10
+tsend=$(timestamp)
+difference=`expr $tsend - $tsstart`
+echo Start: $tsstart
+echo End: $tsend
+echo Difference: $difference
+lasttimeup=$(cat /dev/shm/network-last-uptime)
+echo lasttimeup: $lasttimeup
+now=$(timestamp)
+secondssincelastup=`expr $now - $lasttimeup`
+echo Seconds since last up: $secondssincelastup
+timer=300
+if (( $secondssincelastup >= $timer ));
+then
+	echo Shutting down $now. >> /home/guus/shutdownlog
+	shutdown
+	#net rpc -S 172.16.2.1 -U administrator@megaheights.net%Diekc123 shutdown -t 1 -f
+else 
+	echo Not shutting down $now. >> /home/guus/shutdownlog
+fi
